@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>معرض الشرق الأوسط للمعدات الثقيلة</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
+  body, html {
+    margin: 0; padding: 0; height: 100%; font-family: 'Cairo', sans-serif;
+    background: linear-gradient(270deg, #00aaff, #ffaa00, #aa00ff, #00ffaa);
+    background-size: 800% 800%;
+    animation: gradientShift 30s ease infinite;
+    color: #fff;
+  }
+  @keyframes gradientShift {
+    0%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0% 50%}
+  }
+  header {
+    padding: 15px; text-align: center; font-size: 1.6em; font-weight: bold;
+    text-shadow: 0 0 5px #000a;
+  }
+  main {
+    max-width: 480px; margin: auto; padding: 10px;
+  }
+  .form-group {
+    margin-bottom: 12px;
+  }
+  label {
+    display: block; margin-bottom: 5px; font-weight: 600;
+  }
+  input[type="text"], input[type="number"], input[type="file"], input[type="password"] {
+    width: 100%; padding: 8px; border-radius: 6px; border: none;
+    box-sizing: border-box;
+  }
+  button {
+    background: #005577cc; color: #fff; border: none; padding: 10px 15px;
+    border-radius: 8px; cursor: pointer; font-weight: 600;
+    box-shadow: 0 4px 10px #003344aa;
+    transition: background 0.3s ease;
+  }
+  button:hover {
+    background: #003344;
+  }
+  .equipment-list {
+    margin-top: 20px;
+  }
+  .equipment-item {
+    background: rgba(255 255 255 / 0.15); margin-bottom: 10px;
+    border-radius: 10px; padding: 10px; display: flex; align-items: center;
+    gap: 12px;
+  }
+  .equipment-item img {
+    width: 80px; height: 60px; object-fit: cover; border-radius: 8px;
+    box-shadow: 0 0 8px #222a;
+  }
+  .equipment-info {
+    flex-grow: 1;
+  }
+  .equipment-info h3 {
+    margin: 0 0 4px 0;
+    font-size: 1.1em;
+  }
+  .equipment-info p {
+    margin: 0;
+  }
+  #loginSection, #adminSection {
+    max-width: 300px; margin: 40px auto; background: rgba(0,0,0,0.3);
+    padding: 20px; border-radius: 12px; box-shadow: 0 0 10px #0008;
+  }
+  #loginSection {
+    display: none;
+  }
+  #adminSection {
+    display: none;
+  }
+  #logoutBtn {
+    background: #aa2222;
+    margin-top: 15px;
+  }
+  nav {
+    max-width: 480px; margin: 15px auto; text-align: center;
+  }
+  nav button {
+    margin: 0 8px; padding: 8px 15px;
+    background: #004466;
+    border-radius: 8px;
+  }
+</style>
+</head>
+<body>
+<header>معرض الشرق الأوسط للمعدات الثقيلة</header>
+
+<nav>
+  <button id="showHomeBtn">الرئيسية</button>
+  <button id="showLoginBtn">تسجيل دخول المالك</button>
+  
+</nav>
+
+<main>
+
+  <section id="homeSection">
+    <h2 style="text-align:center;">قائمة المعدات</h2>
+    <section class="equipment-list" id="equipmentList"></section>
+  </section>
+
+  <section id="loginSection">
+    <h2 style="text-align:center;">تسجيل دخول المالك</h2>
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="username">اسم المستخدم</label>
+        <input type="text" id="username" required />
+      </div>
+      <div class="form-group">
+        <label for="password">كلمة المرور</label>
+        <input type="password" id="password" required />
+      </div>
+      <button type="submit">دخول</button>
+    </form>
+    <p id="loginError" style="color:#ff6666; text-align:center; display:none;">اسم المستخدم أو كلمة المرور خاطئة</p>
+  </section>
+
+  <section id="adminSection">
+    <h2 style="text-align:center;">لوحة تحكم المالك</h2>
+    <form id="addForm">
+      <div class="form-group">
+        <label for="name">اسم المعدة</label>
+        <input type="text" id="name" placeholder="اكتب اسم المعدة" required />
+      </div>
+      <div class="form-group">
+        <label for="price">السعر</label>
+        <input type="number" id="price" placeholder="اكتب السعر" required />
+      </div>
+      <div class="form-group">
+        <label for="image">اختر صورة</label>
+        <input type="file" id="image" accept="image/*" required />
+      </div>
+      <button type="submit">أضف المعدة</button>
+    </form>
+    <section class="equipment-list" id="adminEquipmentList"></section>
+    <button id="logoutBtn">تسجيل خروج</button>
+  </section>
+
+</main>
+
+<script>
+  const showHomeBtn = document.getElementById('showHomeBtn');
+  const showLoginBtn = document.getElementById('showLoginBtn');
+
+  const homeSection = document.getElementById('homeSection');
+  const loginSection = document.getElementById('loginSection');
+  const adminSection = document.getElementById('adminSection');
+
+  const loginForm = document.getElementById('loginForm');
+  const loginError = document.getElementById('loginError');
+
+  const addForm = document.getElementById('addForm');
+  const adminEquipmentList = document.getElementById('adminEquipmentList');
+  const equipmentList = document.getElementById('equipmentList');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  const USERNAME = "جمي";
+  const PASSWORD = "1232007";
+
+  // بيانات المعدات محفوظة في localStorage
+  let equipments = JSON.parse(localStorage.getItem('equipments') || '[]');
+
+  // حالة الدخول
+  let loggedIn = false;
+
+  function saveEquipments() {
+    localStorage.setItem('equipments', JSON.stringify(equipments));
+  }
+
+  // عرض المعدات للزوار (بدون أزرار حذف)
+  function renderEquipments() {
+    equipmentList.innerHTML = '';
+    if(equipments.length === 0) {
+      equipmentList.innerHTML = '<p style="text-align:center;opacity:0.7;">لا توجد معدات حالياً</p>';
+      return;
+    }
+    equipments.forEach((eq) => {
+      const item = document.createElement('div');
+      item.className = 'equipment-item';
+
+      const img = document.createElement('img');
+      img.src = eq.image;
+      img.alt = eq.name;
+
+      const info = document.createElement('div');
+      info.className = 'equipment-info';
+
+      const title = document.createElement('h3');
+      title.textContent = eq.name;
+
+      const price = document.createElement('p');
+      price.textContent = 'السعر: ' + eq.price;
+
+      info.appendChild(title);
+      info.appendChild(price);
+
+      item.appendChild(img);
+      item.appendChild(info);
+
+      equipmentList.appendChild(item);
+    });
+  }
+
+  // عرض المعدات للمالك مع زر حذف
+  function renderAdminEquipments() {
+    adminEquipmentList.innerHTML = '';
+    if(equipments.length === 0) {
+      adminEquipmentList.innerHTML = '<p style="text-align:center;opacity:0.7;">لا توجد معدات حالياً</p>';
+      return;
+    }
+    equipments.forEach((eq, idx) => {
+      const item = document.createElement('div');
+      item.className = 'equipment-item';
+
+      const img = document.createElement('img');
+      img.src = eq.image;
+      img.alt = eq.name;
+
+      const info = document.createElement('div');
+      info.className = 'equipment-info';
+
+      const title = document.createElement('h3');
+      title.textContent = eq.name;
+
+      const price = document.createElement('p');
+      price.textContent = 'السعر: ' + eq.price;
+
+      info.appendChild(title);
+      info.appendChild(price);
+
+      const delBtn = document.createElement('button');
+      delBtn.textContent = 'حذف';
+      delBtn.style.background = '#aa2222';
+      delBtn.style.marginLeft = '10px';
+      delBtn.onclick = () => {
+        if(confirm('هل تريد حذف هذه المعدة؟')) {
+          equipments.splice(idx, 1);
+          saveEquipments();
+          renderAdminEquipments();
+          renderEquipments();
+        }
+      };
+
+      item.appendChild(img);
+      item.appendChild(info);
+      item.appendChild(delBtn);
+
+      adminEquipmentList.appendChild(item);
+    });
+  }
+
+  // استعراض الصفحة الرئيسية
+  function showHome() {
+    homeSection.style.display = 'block';
+    loginSection.style.display = 'none';
+    adminSection.style.display = 'none';
+  }
+
+  // استعراض صفحة تسجيل الدخول
+  function showLogin() {
+    homeSection.style.display = 'none';
+    loginSection.style.display = 'block';
+    adminSection.style.display = 'none';
+    loginError.style.display = 'none';
+    loginForm.reset();
+  }
+
+  // استعراض لوحة تحكم المالك
+  function showAdmin() {
+    homeSection.style.display = 'none';
+    loginSection.style.display = 'none';
+    adminSection.style.display = 'block';
+    renderAdminEquipments();
+  }
+
+  // التحقق من حالة الدخول عند تحميل الصفحة
+  window.onload = () => {
+    loggedIn = localStorage.getItem('loggedIn') === 'true';
+    if(loggedIn) {
+      showAdmin();
+    } else {
+      showHome();
+    }
+    renderEquipments();
+  };
+
+  showHomeBtn.onclick = () => {
+    showHome();
+  };
+
+  showLoginBtn.onclick = () => {
+    showLogin();
+  };
+
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const username = loginForm.username.value.trim();
+    const password = loginForm.password.value.trim();
+
+    if(username === USERNAME && password === PASSWORD) {
+      loggedIn = true;
+      localStorage.setItem('loggedIn', 'true');
+      showAdmin();
+    } else {
+      loginError.style.display = 'block';
+    }
+  });
+
+  logoutBtn.onclick = () => {
+    loggedIn = false;
+    localStorage.removeItem('loggedIn');
+    showHome();
+  };
+
+  addForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const name = addForm.name.value.trim();
+    const price = addForm.price.value.trim();
+    const imageInput = addForm.image;
+
+    if (!name || !price || imageInput.files.length === 0) {
+      alert('يرجى ملء جميع الحقول واختيار صورة');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      equipments.push({
+        name: name,
+        price: price,
+        image: event.target.result
+      });
+      saveEquipments();
+      renderAdminEquipments();
+      renderEquipments();
+      addForm.reset();
+    };
+    reader.readAsDataURL(imageInput.files[0]);
+  });
+</script>
+</body>
+</html>
